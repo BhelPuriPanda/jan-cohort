@@ -1,6 +1,8 @@
 import axios from "axios";
 import { JobDescription } from "../models/JobDescription.js";
 import { fleschReadingEase } from "../utils/readable.js";
+import { checkDI } from "../utils/diCheck.js";
+import { extractSEOKeywords } from "../utils/seoKeywords.js";
 
 
 export const generateJobDescriptionAB = async (req, res) => {
@@ -70,11 +72,15 @@ Structure:
         "Generation failed.";
 
       const readabilityScore = fleschReadingEase(text);
+      const diIssues = checkDI(text);
+      const seoKeywords = extractSEOKeywords(text);
 
       results.push({
         version: i + 1,
         jdText: text,
-        readabilityScore
+        readabilityScore,
+        diIssues,
+        seoKeywords,
       });
     }
 
