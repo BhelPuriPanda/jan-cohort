@@ -87,7 +87,7 @@ const HeroOverlay = ({ isClarified, onTrigger }) => {
               className="mt-12"
             >
                {/* 3. Add the navigation logic here */}
-               <PrimaryButton onClick={() => navigate('/signup')}>
+               <PrimaryButton onClick={() => navigate('/jobs')}>
                  Begin Trial
                </PrimaryButton>
             </motion.div>

@@ -1,8 +1,6 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 
 export default function Footer() {
-  const navigate = useNavigate();
 
   const footerSections = {
     Platform: ['Intelligence', 'Workflows', 'Security', 'Roadmap'],
@@ -15,7 +13,7 @@ export default function Footer() {
       
       <div className="max-w-[1600px] mx-auto px-6 lg:px-16 relative z-20">
         
-        {/* --- Top Section: Brand & CTA --- */}
+        {/* --- Top Section: Brand --- */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-24 border-b border-white/5 pb-16">
           <div className="max-w-xl">
             <h2 className="text-6xl md:text-9xl font-display font-extrabold text-white tracking-tighter leading-[0.85] mb-6">
@@ -24,17 +22,6 @@ export default function Footer() {
             <p className="text-lg md:text-xl text-gray-500 font-sans font-light tracking-wide max-w-sm">
               The intelligence layer for modern hiring teams.
             </p>
-          </div>
-          <div className="mt-12 md:mt-0">
-            <button
-              onClick={() => navigate('/signup')}
-              className="group relative px-10 py-5 rounded-full border border-white/20 hover:border-white transition-colors duration-300 overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-white translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-[0.16,1,0.3,1]"></div>
-              <span className="relative z-10 font-mono text-sm uppercase tracking-[0.2em] font-medium text-white group-hover:text-black transition-colors duration-300">
-                Start Free Trial
-              </span>
-            </button>
           </div>
         </div>
 
