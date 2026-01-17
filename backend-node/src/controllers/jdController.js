@@ -111,3 +111,63 @@ Structure:
     });
   }
 };
+
+export const getJD = async (req, res) => {
+  try {
+    const { jdId } = req.params;
+    const jd = await JobDescription.findById(jdId);
+    if (!jd) return res.status(404).json({ message: "JD not found" });
+
+    res.status(200).json(jd);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch JD", error: err.message });
+  }
+};
+
+// Switch current active version
+export const switchJDVersion = async (req, res) => {
+  try {
+    const { jdId } = req.params;
+    const { version } = req.body;
+
+    const jd = await JobDescription.findById(jdId);
+    if (!jd) return res.status(404).json({ message: "JD not found" });
+
+    if (!jd.versions.find(v => v.version === version))
+      return res.status(400).json({ message: "Version not found" });
+
+    jd.currentVersion = version;
+    await jd.save();
+
+    res.status(200).json({ message: "Version switched", currentVersion: jd.currentVersion });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to switch version", error: err.message });
+  }
+};
+
+// Save edited JD as new version
+export const saveEditedJD = async (req, res) => {
+  try {
+    const { jdId } = req.params;
+    const { jdText } = req.body;
+
+    if (!jdText) return res.status(400).json({ message: "jdText is required" });
+
+    const jd = await JobDescription.findById(jdId);
+    if (!jd) return res.status(404).json({ message: "JD not found" });
+
+    const newVersionNumber = jd.versions.length + 1;
+
+    jd.versions.push({
+      version: newVersionNumber,
+      jdText
+    });
+
+    jd.currentVersion = newVersionNumber;
+    await jd.save();
+
+    res.status(200).json({ message: "New version saved", version: newVersionNumber });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to save version", error: err.message });
+  }
+};

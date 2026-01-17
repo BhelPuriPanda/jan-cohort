@@ -1,4 +1,4 @@
-#!D:\Jan Cohort\jan-cohort\backend-python\venv\Scripts\python.exe
+#!C:\projects\jan-coho\backend-python\venv\Scripts\python.exe
 """Extract pdf structure in XML format"""
 
 import logging
