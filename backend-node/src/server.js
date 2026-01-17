@@ -20,6 +20,9 @@ app.use("/api/auth", authRoutes);
 import jobDescriptionRoutes from "./routes/jdRoutes.js";
 app.use("/api/job-description", jobDescriptionRoutes);
 
+import resumeRoutes from "./routes/resumeRoutes.js";
+app.use("/api/resume", resumeRoutes);
+
 // Health check
 app.get("/", (req, res) => {
   res.send("API running 🚀");
