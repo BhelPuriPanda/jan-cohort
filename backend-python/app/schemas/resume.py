@@ -1,7 +1,10 @@
 from pydantic import BaseModel
 from typing import Any
 
-class ResumeUploadResponse(BaseModel):
+class FieldConfidence(BaseModel):
+    value: Any
+    confidence: int
+
+class ResumeResponse(BaseModel):
     success: bool
-    data: Any | None = None
-    error: str | None = None
+    data: dict

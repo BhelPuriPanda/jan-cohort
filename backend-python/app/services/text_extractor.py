@@ -20,3 +20,22 @@ async def extract_text_from_pdf(file) -> str:
 
     print("Extracted Characters:", len(text))
     return text
+# import tempfile
+# from PyPDF2 import PdfReader
+
+# async def extract_text_from_pdf(upload_file):
+#     contents = await upload_file.read()
+
+#     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+#         tmp.write(contents)
+#         tmp_path = tmp.name
+
+#     reader = PdfReader(tmp_path)
+
+#     text = ""
+#     for page in reader.pages:
+#         extracted = page.extract_text()
+#         if extracted:
+#             text += extracted + "\n"
+
+#     return text
