@@ -13,8 +13,6 @@ router = APIRouter()
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-from app.services.resume_parser import parse_pdf
-
 
 @router.post(
     "/resume/parse",
@@ -29,15 +27,45 @@ async def parse_resume(file: UploadFile = File(...)):
             detail="Only PDF files are allowed"
         )
 
-    # Save the file to uploads folder
-    file_path = os.path.join(UPLOAD_FOLDER, file.filename)
-    with open(file_path, "wb") as f:
-        contents = await file.read()
-        f.write(contents)
+    try:
+        # 2️⃣ (Optional) Save file to disk
+        file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+        file_bytes = await file.read()
 
-    return {
-        "filename": file.filename,
-        "content_type": file.content_type,
-        "size": len(contents),
-        "path": file_path
-    }
+        with open(file_path, "wb") as f:
+            f.write(file_bytes)
+
+        # 3️⃣ Extract text from PDF (WORKING LOGIC)
+        # IMPORTANT: pass UploadFile again using BytesIO logic
+        from io import BytesIO
+        import pdfplumber
+
+        text = ""
+        with pdfplumber.open(BytesIO(file_bytes)) as pdf:
+            for page in pdf.pages:
+                page_text = page.extract_text()
+                if page_text:
+                    text += page_text + "\n"
+
+        if not text.strip():
+            raise ValueError("No extractable text found in PDF")
+
+        # 4️⃣ Parse resume using LLM
+        parsed_data = parse_resume_llm(text)
+
+        # 5️⃣ Return clean response
+        return {
+            "success": True,
+            "data": parsed_data
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
+
+    # Optional cleanup
+    # finally:
+    #     if os.path.exists(file_path):
+    #         os.remove(file_path)
