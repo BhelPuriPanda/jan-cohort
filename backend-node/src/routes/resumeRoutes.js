@@ -49,4 +49,41 @@ router.post("/parse", upload.single("resume"), async (req, res) => {
   }
 });
 
+// POST /api/resume/save
+router.post("/save", async (req, res) => {
+  try {
+    const pythonServiceUrl = "http://127.0.0.1:8000/api/resume/save";
+    const response = await axios.post(pythonServiceUrl, req.body);
+    res.json(response.data);
+  } catch (error) {
+    console.error("Error saving profile:", error.message);
+    res.status(500).json({ error: "Failed to save profile", details: error.message });
+  }
+});
+
+// GET /api/resume/saved
+router.get("/saved", async (req, res) => {
+  try {
+    const pythonServiceUrl = "http://127.0.0.1:8000/api/resume/saved";
+    const response = await axios.get(pythonServiceUrl);
+    res.json(response.data);
+  } catch (error) {
+    console.error("Error listing profiles:", error.message);
+    res.status(500).json({ error: "Failed to list profiles", details: error.message });
+  }
+});
+
+// GET /api/resume/saved/:id
+router.get("/saved/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const pythonServiceUrl = `http://127.0.0.1:8000/api/resume/saved/${id}`;
+    const response = await axios.get(pythonServiceUrl);
+    res.json(response.data);
+  } catch (error) {
+    console.error("Error fetching profile:", error.message);
+    res.status(404).json({ error: "Profile not found", details: error.message });
+  }
+});
+
 export default router;

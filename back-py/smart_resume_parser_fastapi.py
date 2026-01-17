@@ -32,6 +32,10 @@ import threading
 app = FastAPI(title="Smart Resume Parser (Mock)")
 router = APIRouter()
 
+@app.get("/")
+def health_check():
+    return {"status": "ok", "message": "Smart Resume Parser is running"}
+
 # CORS (optional)
 app.add_middleware(
     CORSMiddleware,
