@@ -1,23 +1,23 @@
 import axios from "axios";
+import { JobDescription } from "../models/JobDescription.js";
 
-export const generateJobDescription = async (req, res) => {
+export const generateJobDescriptionAB = async (req, res) => {
   try {
     const {
+      employerId,
       jobTitle,
       industry,
       experienceLevel,
       keySkills,
       companyCulture,
-      specialRequirements,
+      specialRequirements
     } = req.body;
 
-    if (!jobTitle || !industry || !experienceLevel || !keySkills?.length) {
-      return res.status(400).json({
-        message: "Missing required fields",
-      });
+    if (!employerId || !jobTitle || !industry || !experienceLevel || !keySkills?.length) {
+      return res.status(400).json({ message: "Missing required fields" });
     }
 
-    const prompt = `
+    const basePrompt = `
 Generate a professional, structured job description.
 
 Job Title: ${jobTitle}
@@ -27,43 +27,76 @@ Key Skills: ${keySkills.join(", ")}
 Company Culture: ${companyCulture}
 Special Requirements: ${specialRequirements || "None"}
 
-Use this structure:
+Structure:
 - Job Title at Company
-- About the Role (2-3 paragraphs)
-- Key Responsibilities (5-7 bullets)
+- About the Role
+- Key Responsibilities
 - Required Skills
 - Preferred Skills
 - Experience
-- What We Offer (3-5 bullets)
+- What We Offer
 - About Company
 `;
 
-    const response = await axios.post(
-      "https://openrouter.ai/api/v1/chat/completions",
-      {
-        model: "openai/gpt-4o-mini",
-        messages: [{ role: "user", content: prompt }],
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-          "Content-Type": "application/json",
-          "HTTP-Referer": "http://localhost:4001", // REQUIRED by OpenRouter
-          "X-Title": "JD Generator Hackathon",
+    const variations = [
+      basePrompt + "\nTone: Formal and corporate.",
+      basePrompt + "\nTone: Friendly startup environment.",
+      basePrompt + "\nTone: Remote-first and inclusive."
+    ];
+
+    const results = [];
+
+    for (let i = 0; i < variations.length; i++) {
+      const response = await axios.post(
+        "https://openrouter.ai/api/v1/chat/completions",
+        {
+          model: "openai/gpt-4o-mini",
+          messages: [{ role: "user", content: variations[i] }]
         },
-      }
-    );
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+            "Content-Type": "application/json",
+            "HTTP-Referer": "http://localhost:4001",
+            "X-Title": "JD Generator Hackathon"
+          }
+        }
+      );
 
-    const jobDescription =
-      response.data.choices?.[0]?.message?.content ||
-      "Failed to generate job description.";
+      const text =
+        response.data.choices?.[0]?.message?.content ||
+        "Generation failed.";
 
-    res.status(200).json({ jobDescription });
+      results.push({
+        version: i + 1,
+        text
+      });
+    }
+
+    const jd = await JobDescription.create({
+      employerId,
+      input: {
+        jobTitle,
+        industry,
+        experienceLevel,
+        keySkills,
+        companyCulture,
+        specialRequirements
+      },
+      versions: results,
+      currentVersion: 1
+    });
+
+    res.status(200).json({
+      jdId: jd._id,
+      versions: results,
+      currentVersion: 1
+    });
   } catch (err) {
-    console.error(err.response?.data || err.message);
+    console.error(err.message);
     res.status(500).json({
-      message: "Error generating job description",
-      error: err.response?.data || err.message,
+      message: "A/B JD generation failed",
+      error: err.message
     });
   }
 };
