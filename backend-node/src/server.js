@@ -17,6 +17,9 @@ connectDB();
 import authRoutes from "./routes/authRoutes.js";
 app.use("/api/auth", authRoutes);
 
+import jobDescriptionRoutes from "./routes/jdRoutes.js";
+app.use("/api/job-description", jobDescriptionRoutes);
+
 // Health check
 app.get("/", (req, res) => {
   res.send("API running 🚀");
