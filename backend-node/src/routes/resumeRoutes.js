@@ -18,7 +18,7 @@ router.post("/parse", upload.single("resume"), async (req, res) => {
     }
 
     const filePath = req.file.path;
-    const pythonServiceUrl = "http://127.0.0.1:8000/api/resume/";
+    const pythonServiceUrl = "http://127.0.0.1:8000/api/resume/parse";
 
     // Prepare form data for Python service
     const form = new FormData();

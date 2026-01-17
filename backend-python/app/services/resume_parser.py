@@ -1,22 +1,17 @@
-import pdfplumber
-import os
+import re
 
-def parse_pdf(file_path: str) -> dict:
-    text = ""
-    try:
-        with pdfplumber.open(file_path) as pdf:
-            for page in pdf.pages:
-                text += page.extract_text() + "\n"
-        
-        # In a real scenario with LLM, we would send 'text' to the LLM here.
-        # For now, we return the raw text and some basic metadata.
-        return {
-            "success": True,
-            "text": text,
-            "message": "Text extracted successfully"
-        }
-    except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
-        }
+def parse_resume(text: str) -> dict:
+    email = re.search(r'[\w\.-]+@[\w\.-]+', text)
+    phone = re.search(r'\+?\d[\d\s-]{8,}', text)
+
+    skills = []
+    skills_section = re.search(r"SKILLS(.+?)\n\n", text, re.DOTALL | re.IGNORECASE)
+    if skills_section:
+        skills = [s.strip() for s in skills_section.group(1).split(",")]
+
+    return {
+        "name": text.split("\n")[0],
+        "email": email.group() if email else None,
+        "phone": phone.group() if phone else None,
+        "skills": skills
+    }
