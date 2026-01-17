@@ -1,5 +1,7 @@
 import axios from "axios";
 import { JobDescription } from "../models/JobDescription.js";
+import { fleschReadingEase } from "../utils/readable.js";
+
 
 export const generateJobDescriptionAB = async (req, res) => {
   try {
@@ -67,9 +69,12 @@ Structure:
         response.data.choices?.[0]?.message?.content ||
         "Generation failed.";
 
+      const readabilityScore = fleschReadingEase(text);
+
       results.push({
         version: i + 1,
-        text
+        jdText: text,
+        readabilityScore
       });
     }
 

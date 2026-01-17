@@ -31,16 +31,7 @@ const jobDescriptionSchema = new mongoose.Schema(
       specialRequirements: String
     },
 
-    versions: [
-      {
-        version: Number,
-        text: String,
-        createdAt: {
-          type: Date,
-          default: Date.now
-        }
-      }
-    ],
+    versions: [jdVersionSchema],
 
     currentVersion: {
       type: Number,
