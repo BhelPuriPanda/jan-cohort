@@ -1,4 +1,4 @@
-#!D:\Jan Cohort\jan-cohort\backend-python\venv\Scripts\python.exe
+#!C:\projects\jan-coho\backend-python\venv\Scripts\python.exe
 """A command line tool for extracting text and images from PDF and
 output it to plain text, html, xml or tags.
 """

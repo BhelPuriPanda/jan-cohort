@@ -8,6 +8,8 @@ router = APIRouter()
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
+from app.services.resume_parser import parse_pdf
+
 @router.post("/resume/")
 async def upload_resume(file: UploadFile = File(...)):
     # Only allow PDFs
@@ -20,9 +22,16 @@ async def upload_resume(file: UploadFile = File(...)):
         contents = await file.read()
         f.write(contents)
 
+    # Parse the PDF
+    parsed_data = parse_pdf(file_path)
+
+    # Cleanup (optional - depending on if we want to keep files)
+    # os.remove(file_path)
+
     return {
         "filename": file.filename,
         "content_type": file.content_type,
         "size": len(contents),
-        "path": file_path
+        "path": file_path,
+        "parsed_data": parsed_data
     }
