@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { authAPI } from '../services/api';
 
 export default function Login() {
-  const navigator = useNavigate();
+  const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || "/jobs";
   const [role, setRole] = useState('employee');
@@ -45,7 +45,7 @@ export default function Login() {
         email: response.email,
         role: response.role
       }));
-      navigator(from, { replace: true });
+      navigate(from, { replace: true });
     } catch (err) {
       setError(err.message || 'Login failed. Please check your credentials.');
     } finally {
