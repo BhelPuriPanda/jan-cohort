@@ -59,7 +59,7 @@
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/jan-coho.git
+git clone https://github.com/BhelPuriPanda/jan-coho.git
 cd jan-coho
 ```
 
