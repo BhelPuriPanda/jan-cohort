@@ -68,11 +68,13 @@ export default function JobDashboard() {
   }, []);
 
   const getUserInitials = () => {
+    if (user?.name) return user.name.charAt(0).toUpperCase();
     if (user?.email) return user.email.charAt(0).toUpperCase();
     return 'U';
   };
 
   const getUserDisplayName = () => {
+    if (user?.name) return user.name;
     if (user?.email) return user.email.split('@')[0];
     return 'User';
   };
@@ -292,7 +294,7 @@ export default function JobDashboard() {
                     <div className="p-1 space-y-0.5">
                       <div className="px-3 py-2 border-b border-white/5 mb-1">
                         <p className="text-xs text-gray-500 uppercase tracking-wider">Signed in as</p>
-                        <p className="text-sm text-white font-medium truncate">{user?.email || 'Guest'}</p>
+                        <p className="text-sm text-white font-medium truncate">{user?.name || user?.email || 'Guest'}</p>
                       </div>
 
                       <button className="flex items-center gap-3 w-full px-3 py-2 text-sm text-gray-300 hover:bg-white/5 hover:text-white rounded-lg transition-colors text-left group">

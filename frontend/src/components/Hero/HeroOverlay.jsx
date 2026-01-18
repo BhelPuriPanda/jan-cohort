@@ -31,7 +31,7 @@ const HeroOverlay = ({ isClarified, onTrigger }) => {
   return (
     <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center px-4">
       <AnimatePresence mode="wait">
-        
+
         {/* State 1: Chaos / Initial Trigger */}
         {!isClarified && (
           <motion.button
@@ -53,15 +53,15 @@ const HeroOverlay = ({ isClarified, onTrigger }) => {
         {/* State 2: Clarity Sequence */}
         {isClarified && (
           <div className="flex flex-col items-center">
-            
+
             {/* Phase 2: The Title */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3, duration: 0.5 }}
             >
-              <TypingText 
-                text="Clarity." 
+              <TypingText
+                text="Clarity."
                 className="font-cursive text-8xl md:text-[11rem] italic tracking-normal text-white mb-8"
               />
             </motion.div>
@@ -80,16 +80,16 @@ const HeroOverlay = ({ isClarified, onTrigger }) => {
             </motion.div>
 
             {/* Phase 4: CTA */}
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.5, duration: 0.8 }}
               className="mt-12"
             >
-               {/* 3. Add the navigation logic here */}
-               <PrimaryButton onClick={() => navigate('/jobs')}>
-                 Begin Trial
-               </PrimaryButton>
+              {/* 3. Add the navigation logic here */}
+              <PrimaryButton onClick={() => navigate('/jobs')}>
+                Begin Trial
+              </PrimaryButton>
             </motion.div>
           </div>
         )}

@@ -7,6 +7,8 @@
 
 import  { User } from "../models/User.js";
 
+console.log("✅ authController.js LOADED (Updated Version)"); // DEBUG LOG
+
 /**
  * LOGIN Controller
  * 
@@ -24,6 +26,7 @@ import  { User } from "../models/User.js";
  * @returns {Object} JSON response with email, role, and success/error message
  */
 export const login = async (req, res) => {
+  console.log("🔥🔥🔥 LOGIN CONTROLLER HIT 🔥🔥🔥"); 
   // Destructure credentials from request body
   const { email, password, role } = req.body;
   
@@ -42,12 +45,18 @@ export const login = async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials or role" });
     }
 
-    // Return only non-sensitive information (email and role)
+    // Return user information
+    console.log("Login successful for:", email);
+    console.log("User Object:", user);
+    
     res.json({
-      _id: user._id,
+      _id: user._id.toString(),
+      name: user.name,
       email: user.email,
       role: user.role,
-      message: "Login successful"
+      message: "Login successful",
+      timestamp: new Date().toISOString(),
+      debug_check: "CODE_IS_UPDATED"
     });
   } catch (err) {
     // Catch database or server errors and return 500 status
@@ -86,6 +95,7 @@ export const signup = async (req, res) => {
     // Return newly created user's email and role
     res.json({
       _id: user._id,
+      name: user.name,
       email: user.email,
       role: user.role,
       message: "User created successfully"

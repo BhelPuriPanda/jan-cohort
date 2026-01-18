@@ -11,6 +11,14 @@ import { JobDescription } from "../models/JobDescription.js";
 import { fleschReadingEase } from "../utils/readable.js";
 import { checkDI } from "../utils/diCheck.js";
 import { extractSEOKeywords } from "../utils/seoKeywords.js";
+import fs from 'fs';
+import path from 'path';
+
+const logToFile = (message) => {
+    const logPath = path.join(process.cwd(), 'debug_jd.log');
+    const timestamp = new Date().toISOString();
+    fs.appendFileSync(logPath, `[${timestamp}] ${message}\n`);
+};
 
 
 /**
@@ -43,8 +51,12 @@ export const generateJobDescriptionAB = async (req, res) => {
       experienceLevel,
       keySkills,
       companyCulture,
-      specialRequirements
+      specialRequirements,
+      location // Add location to destructuring
     } = req.body;
+
+    logToFile(`Generate AB Hit. Employer: ${employerId}, Job: ${jobTitle}`);
+    console.log("Generate AB Controller Hit!");
 
     // Validate that all required fields are provided
     if (!employerId || !jobTitle || !industry || !experienceLevel || !keySkills?.length) {
@@ -58,6 +70,7 @@ Generate a professional, structured job description.
 Job Title: ${jobTitle}
 Industry: ${industry}
 Experience Level: ${experienceLevel}
+Location: ${location || "Remote"}
 Key Skills: ${keySkills.join(", ")}
 Company Culture: ${companyCulture}
 Special Requirements: ${specialRequirements || "None"}
@@ -86,6 +99,7 @@ Structure:
     // Generate each variation using OpenRouter API
     for (let i = 0; i < variations.length; i++) {
       // Call OpenRouter API with GPT-4o-mini model
+
       const response = await axios.post(
         "https://openrouter.ai/api/v1/chat/completions",
         {
@@ -102,10 +116,20 @@ Structure:
         }
       );
 
+      console.log(`OpenRouter Response Status (${i}):`, response.status);
+      logToFile(`OpenRouter Response Status (${i}): ${response.status}`);
+      logToFile(`OpenRouter Response Data (${i}): ${JSON.stringify(response.data)}`);
+
       // Extract generated text from API response
       const text =
         response.data.choices?.[0]?.message?.content ||
         "Generation failed.";
+      
+      logToFile(`Generated Text Length (${i}): ${text.length}`);
+      if (text === "Generation failed.") {
+          logToFile(`ERROR: Generation failed for variation ${i}`);
+          console.error("OpenRouter returned no content or malformed response:", JSON.stringify(response.data));
+      }
 
       // Analyze generated job description
       // Calculate readability score (Flesch Reading Ease)

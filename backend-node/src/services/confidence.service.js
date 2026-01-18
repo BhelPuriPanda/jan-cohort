@@ -19,17 +19,30 @@
  * @returns {number} Confidence score from 0 to 100
  */
 const confidence = (value, matches = 0) => {
-  // Return 0 if no value provided or value is empty array
-  if (!value || (Array.isArray(value) && value.length === 0)) return 0;
-  
-  // Start with base confidence score
-  let score = 60;
-  
-  // Add bonus for each match found, capped at 30 points
-  score += Math.min(matches * 10, 30);
-  
-  // Ensure score doesn't exceed 100
-  return Math.min(score, 100);
+    // 0.0 - 1.0 Scale
+    if (!value) return 0.0;
+    
+    // Arrays (Skills)
+    if (Array.isArray(value)) {
+        if (value.length === 0) return 0.0;
+        // More skills = higher confidence, capped at 1.0 for >5 skills
+        return Math.min(value.length * 0.2, 1.0);
+    }
+
+    // Strings
+    if (typeof value === 'string') {
+        const len = value.trim().length;
+        if (len === 0) return 0.0;
+        
+        // Basic Length Checks
+        if (len < 3) return 0.3; 
+        
+        // We assume the parser sends a "match" flag (1 or 0) often, but we can also heuristic here.
+        // If it passed the Regex in parser, it's fairly high confidence.
+        return 0.95; 
+    }
+
+    return 0.5;
 };
 
 // Export confidence function as default export

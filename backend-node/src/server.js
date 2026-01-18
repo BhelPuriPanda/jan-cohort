@@ -24,6 +24,12 @@ app.use(cors());
 // Parse incoming JSON requests with 10MB size limit
 app.use(express.json({ limit: "10mb" }));
 
+// DEBUG: Log all requests
+app.use((req, res, next) => {
+  console.log(`📡 REQUEST RECEIVED: ${req.method} ${req.url}`);
+  next();
+});
+
 // ============================================================
 // TEST ROUTES
 // ============================================================
@@ -45,6 +51,10 @@ connectDB();
 // ============================================================
 // Authentication routes (login, signup)
 import authRoutes from "./routes/authRoutes.js";
+import * as authControllerDebug from "./controllers/authController.js";
+console.log("🔍 DEBUG: Loaded login function source start:");
+console.log(authControllerDebug.login.toString().substring(0, 2000)); 
+console.log("🔍 DEBUG: Loaded login function source end");
 app.use("/api/auth", authRoutes);
 
 // Job description routes (generate, edit, version management)

@@ -39,6 +39,7 @@ export default function Login() {
 
     try {
       const response = await authAPI.login(email, password, role);
+      console.log('Login response:', response);
       localStorage.setItem('user', JSON.stringify({
         _id: response._id,
         email: response.email,
