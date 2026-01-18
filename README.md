@@ -59,7 +59,7 @@
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/jan-coho.git
+git clone https://github.com/BhelPuriPanda/jan-coho.git
 cd jan-coho
 ```
 
@@ -147,4 +147,4 @@ The platform supports two user roles:
 
 ---
 
-© 2026 Clarity Jobs. Built with ❤️ by the Clarity Team.
+© 2026 Clarity Jobs. Built with ❤️ by the Team ThatsWhatSheCoded.
