@@ -147,4 +147,4 @@ The platform supports two user roles:
 
 ---
 
-© 2026 Clarity Jobs. Built with ❤️ by the Clarity Team.
+© 2026 Clarity Jobs. Built with ❤️ by the Team ThatsWhatSheCoded.
