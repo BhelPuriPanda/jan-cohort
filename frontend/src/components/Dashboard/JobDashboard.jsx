@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, MapPin, DollarSign, Briefcase, Clock, Filter, Grid, List, Heart, X, CheckCircle, ChevronDown, Bell, LogOut, Info, User } from 'lucide-react';
+import { Search, MapPin, DollarSign, Briefcase, Clock, Filter, Grid, List, Heart, X, CheckCircle, ChevronDown, Bell, LogOut, Info, User, FileText, FilePlus } from 'lucide-react';
 import { generateJobs } from '../../utils/mockData';
 
 // --- CUSTOM HOOK: Debounce ---
@@ -227,6 +227,27 @@ export default function JobDashboard() {
 
           <div className="flex items-center gap-4">
 
+            {/* Role-Based Quick Actions */}
+            {user?.role === 'employer' && (
+              <button
+                onClick={() => navigate('/jd-generator')}
+                className="hidden md:flex items-center gap-2 bg-teal-500/10 text-teal-400 border border-teal-500/20 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-teal-500/20 transition-all"
+              >
+                <FilePlus size={14} />
+                Generate JD
+              </button>
+            )}
+
+            {user?.role === 'employee' && (
+              <button
+                onClick={() => navigate('/resume-parser')}
+                className="hidden md:flex items-center gap-2 bg-purple-500/10 text-purple-400 border border-purple-500/20 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-purple-500/20 transition-all"
+              >
+                <FileText size={14} />
+                Optimize Resume
+              </button>
+            )}
+
             {/* Notifications Icon */}
             <button className="relative p-2 text-gray-400 hover:text-white transition-colors">
               <Bell className="w-5 h-5" />
@@ -352,8 +373,8 @@ export default function JobDashboard() {
                           setShowSortMenu(false);
                         }}
                         className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors flex items-center justify-between group ${filters.sortBy === option.value
-                            ? 'bg-teal-500/10 text-teal-400'
-                            : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                          ? 'bg-teal-500/10 text-teal-400'
+                          : 'text-gray-400 hover:bg-white/5 hover:text-white'
                           }`}
                       >
                         {option.label}

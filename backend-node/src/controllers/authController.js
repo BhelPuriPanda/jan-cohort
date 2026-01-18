@@ -44,6 +44,7 @@ export const login = async (req, res) => {
 
     // Return only non-sensitive information (email and role)
     res.json({
+      _id: user._id,
       email: user.email,
       role: user.role,
       message: "Login successful"
@@ -84,6 +85,7 @@ export const signup = async (req, res) => {
     
     // Return newly created user's email and role
     res.json({
+      _id: user._id,
       email: user.email,
       role: user.role,
       message: "User created successfully"

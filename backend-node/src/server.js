@@ -88,4 +88,5 @@ const PORT = process.env.PORT || 5000;
 // Start Express server and listen for incoming requests
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(`Server updated at ${new Date().toISOString()}`);
 });

@@ -17,6 +17,9 @@ export default function Login() {
   const indicatorRef = useRef(null);
 
   useEffect(() => {
+    // Clear any existing session to ensure clean login
+    localStorage.removeItem('user');
+
     // Animate the toggle pill sliding
     if (indicatorRef.current) {
       if (role === 'employee') {
@@ -36,7 +39,11 @@ export default function Login() {
 
     try {
       const response = await authAPI.login(email, password, role);
-      localStorage.setItem('user', JSON.stringify({ email: response.email, role: response.role }));
+      localStorage.setItem('user', JSON.stringify({
+        _id: response._id,
+        email: response.email,
+        role: response.role
+      }));
       navigator(from, { replace: true });
     } catch (err) {
       setError(err.message || 'Login failed. Please check your credentials.');
