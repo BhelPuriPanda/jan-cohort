@@ -4,6 +4,8 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Jobs from './pages/Jobs';
+import JobDashboard from './components/Dashboard/JobDashboard';
+import ProtectedRoute from './components/Auth/ProtectedRoute';
 
 function App() {
   return (
@@ -12,7 +14,22 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/jobs" element={<Jobs />} />
+        <Route
+          path="/jobs"
+          element={
+            <ProtectedRoute>
+              <Jobs />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <JobDashboard />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </div>
   );

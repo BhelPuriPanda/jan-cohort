@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Bell } from 'lucide-react';
 
-export default function DashboardNavbar() {
+export default function DashboardNavbar({ searchTerm, onSearchChange }) {
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState('discovery');
 
@@ -62,14 +62,14 @@ export default function DashboardNavbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-black border-b border-white/10">
       <div className="max-w-[1920px] mx-auto px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          
+
           {/* Left Section: Logo & Branding */}
           <div className="flex items-center gap-3">
             {/* Logo - Circular with teal outline and diamond */}
             <div className="relative w-10 h-10 rounded-full border border-teal-500 flex items-center justify-center">
               <div className="w-5 h-5 bg-teal-500 transform rotate-45"></div>
             </div>
-            
+
             {/* Brand Name */}
             <div className="flex flex-col">
               <span className="text-xl font-serif font-bold text-white leading-none">
@@ -85,25 +85,22 @@ export default function DashboardNavbar() {
           <div className="hidden md:flex items-center gap-8">
             <button
               onClick={() => setActiveTab('discovery')}
-              className={`text-sm font-sans transition-colors ${
-                activeTab === 'discovery' ? 'text-white' : 'text-gray-400 hover:text-white'
-              }`}
+              className={`text-sm font-sans transition-colors ${activeTab === 'discovery' ? 'text-white' : 'text-gray-400 hover:text-white'
+                }`}
             >
               Discovery
             </button>
             <button
               onClick={() => setActiveTab('saved')}
-              className={`text-sm font-sans transition-colors ${
-                activeTab === 'saved' ? 'text-white' : 'text-gray-400 hover:text-white'
-              }`}
+              className={`text-sm font-sans transition-colors ${activeTab === 'saved' ? 'text-white' : 'text-gray-400 hover:text-white'
+                }`}
             >
               Saved
             </button>
             <button
               onClick={() => setActiveTab('analytics')}
-              className={`text-sm font-sans transition-colors ${
-                activeTab === 'analytics' ? 'text-white' : 'text-gray-400 hover:text-white'
-              }`}
+              className={`text-sm font-sans transition-colors ${activeTab === 'analytics' ? 'text-white' : 'text-gray-400 hover:text-white'
+                }`}
             >
               Analytics
             </button>
@@ -117,6 +114,8 @@ export default function DashboardNavbar() {
               <input
                 type="text"
                 placeholder="Search the gallery..."
+                value={searchTerm || ''}
+                onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
                 className="pl-10 pr-4 py-2 bg-white/5 border border-gray-700 rounded-lg text-sm text-white placeholder-gray-400 focus:outline-none focus:border-teal-500/50 focus:bg-white/10 transition-colors w-64"
               />
             </div>
