@@ -76,7 +76,7 @@ export default function Login() {
 
           <img
             // High-quality Unsplash image matching your "VR Red/Blue" reference
-            src="https://images.unsplash.com/photo-1622979135225-d2ba269fb1bd?q=80&w=2000&auto=format&fit=crop"
+            src="https://images.unsplash.com/photo-1768321140168-fa4795cb03f8?q=80&w=681&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
             alt="Immersive Experience"
             className="w-full h-full object-cover opacity-90 hover:scale-105 transition-transform duration-[2s]"
           />
