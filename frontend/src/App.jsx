@@ -6,6 +6,8 @@ import Signup from './pages/Signup';
 import Jobs from './pages/Jobs';
 import ResumeParser from './pages/ResumeParser';
 import JDGenerator from './pages/JDGenerator';
+import SavedJDs from './pages/SavedJDs';
+import PostJob from './pages/PostJob';
 import JobDashboard from './components/Dashboard/JobDashboard';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 
@@ -45,6 +47,22 @@ function App() {
           element={
             <ProtectedRoute>
               <JobDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/saved-jds"
+          element={
+            <ProtectedRoute>
+              <SavedJDs />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/post-job"
+          element={
+            <ProtectedRoute>
+              <PostJob />
             </ProtectedRoute>
           }
         />

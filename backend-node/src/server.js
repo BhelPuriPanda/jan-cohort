@@ -61,6 +61,10 @@ app.use("/api/auth", authRoutes);
 import jobDescriptionRoutes from "./routes/jdRoutes.js";
 app.use("/api/job-description", jobDescriptionRoutes);
 
+// Job Posting routes (create, get, apply)
+import jobRoutes from "./routes/jobRoutes.js";
+app.use("/api/jobs", jobRoutes);
+
 // Resume parsing routes (upload, parse)
 import resumeRoutes from "./routes/resume.router.js";
 console.log("✅ Mounting resumeRoutes...");

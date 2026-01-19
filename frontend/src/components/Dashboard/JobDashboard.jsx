@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, MapPin, DollarSign, Briefcase, Clock, Filter, Grid, List, Heart, X, CheckCircle, ChevronDown, Bell, LogOut, Info, User, FileText, FilePlus } from 'lucide-react';
-import { generateJobs } from '../../utils/mockData';
+import { jobsAPI } from '../../services/api';
+import JobDetailsModal from './JobDetailsModal';
 
 // --- CUSTOM HOOK: Debounce ---
 function useDebounce(value, delay) {
@@ -20,7 +21,6 @@ const MatchRing = ({ score }) => {
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (score / 100) * circumference;
 
-  // Color logic based on score
   const color = score > 90 ? 'text-teal-400' : score > 75 ? 'text-blue-400' : 'text-yellow-400';
 
   return (
@@ -47,8 +47,10 @@ export default function JobDashboard() {
   const [showSortMenu, setShowSortMenu] = useState(false);
   const [allJobs, setAllJobs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
+  const [viewMode, setViewMode] = useState('grid');
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null); // For Modal
+
   const [savedJobs, setSavedJobs] = useState(() => {
     const saved = localStorage.getItem('claritySavedJobs');
     return saved ? JSON.parse(saved) : [];
@@ -90,18 +92,40 @@ export default function JobDashboard() {
 
   const [filters, setFilters] = useState({
     minSalary: 0,
-    maxExperience: 10,
-    jobTypes: [], // ['Full-time', 'Remote']
+    maxExperience: 20,
+    jobTypes: [],
     locations: [],
-    sortBy: 'match' // 'match', 'salary', 'date'
+    sortBy: 'match'
   });
 
-  // 1. Load Data (Simulated API)
+  // 1. Load Data (Real API)
   useEffect(() => {
-    setTimeout(() => {
-      setAllJobs(generateJobs(60));
-      setLoading(false);
-    }, 800);
+    const fetchJobs = async () => {
+      setLoading(true);
+      try {
+        const data = await jobsAPI.getAll();
+
+        // Normalize Backend Data to Frontend Structure
+        const normalizedJobs = data.map(job => ({
+          ...job,
+          id: job._id,
+          experience: job.experienceLevel, // Map experienceLevel to experience
+          postedDate: job.postedAt,
+          // Use max salary for simplified display/filtering logic
+          salary: job.salary?.max || job.salary?.min || 0,
+          // Generate random match score for demo purposes (until matching engine is ready)
+          matchScore: Math.floor(Math.random() * (98 - 65) + 65)
+        }));
+
+        setAllJobs(normalizedJobs);
+      } catch (err) {
+        console.error("Failed to fetch jobs:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJobs();
   }, []);
 
   // 2. Persist Saved Jobs
@@ -113,14 +137,14 @@ export default function JobDashboard() {
     setSavedJobs(prev => prev.includes(id) ? prev.filter(j => j !== id) : [...prev, id]);
   };
 
-  // 3. Filter & Sort Logic (The Core Brain)
+  // 3. Filter & Sort Logic
   const filteredJobs = useMemo(() => {
     let result = allJobs.filter(job => {
       // Search
-      const matchesSearch = job.title.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-        job.company.toLowerCase().includes(debouncedSearch.toLowerCase());
+      const matchesSearch = job.title?.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        job.company?.toLowerCase().includes(debouncedSearch.toLowerCase());
 
-      // Salary (Annual)
+      // Salary
       const matchesSalary = job.salary >= filters.minSalary;
 
       // Experience
@@ -138,12 +162,11 @@ export default function JobDashboard() {
     return result.sort((a, b) => {
       if (filters.sortBy === 'salary') return b.salary - a.salary;
       if (filters.sortBy === 'date') return new Date(b.postedDate) - new Date(a.postedDate);
-      return b.matchScore - a.matchScore; // Default: Match Score
+      return b.matchScore - a.matchScore;
     });
   }, [allJobs, debouncedSearch, filters]);
 
   // --- RENDER HELPERS ---
-
   const FilterSection = () => (
     <div className="space-y-8">
       {/* Experience Slider */}
@@ -178,7 +201,7 @@ export default function JobDashboard() {
       <div>
         <h3 className="text-sm font-mono uppercase tracking-widest text-gray-400 mb-4">Job Type</h3>
         <div className="flex flex-wrap gap-2">
-          {['Full-time', 'Contract', 'Part-time', 'Remote'].map(type => (
+          {['Full-time', 'Contract', 'Part-time', 'Remote', 'Internship', 'Freelance'].map(type => (
             <button
               key={type}
               onClick={() => {
@@ -212,7 +235,7 @@ export default function JobDashboard() {
       {/* --- HEADER --- */}
       <header className="sticky top-0 z-40 bg-black/60 backdrop-blur-md border-b border-white/5 px-6 py-4 transition-all duration-300">
         <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <h1 className="text-2xl font-display font-bold tracking-tighter">
+          <h1 className="text-2xl font-display font-bold tracking-tighter cursor-pointer" onClick={() => navigate('/')}>
             Clarity<span className="text-teal-500">Jobs.</span>
           </h1>
 
@@ -229,15 +252,24 @@ export default function JobDashboard() {
 
           <div className="flex items-center gap-4">
 
-            {/* Role-Based Quick Actions */}
+            {/* Quick Actions */}
             {user?.role === 'employer' && (
-              <button
-                onClick={() => navigate('/jd-generator')}
-                className="hidden md:flex items-center gap-2 bg-teal-500/10 text-teal-400 border border-teal-500/20 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-teal-500/20 transition-all"
-              >
-                <FilePlus size={14} />
-                Generate JD
-              </button>
+              <>
+                <button
+                  onClick={() => navigate('/post-job')}
+                  className="hidden md:flex items-center gap-2 bg-teal-500 text-black border border-teal-500 px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-teal-400 transition-all shadow-[0_0_15px_rgba(20,184,166,0.2)]"
+                >
+                  <FilePlus size={16} />
+                  Post Job
+                </button>
+                <button
+                  onClick={() => navigate('/jd-generator')}
+                  className="hidden md:flex items-center gap-2 bg-teal-500/10 text-teal-400 border border-teal-500/20 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-teal-500/20 transition-all"
+                >
+                  <FileText size={14} />
+                  Generate JD
+                </button>
+              </>
             )}
 
             {user?.role === 'employee' && (
@@ -317,10 +349,8 @@ export default function JobDashboard() {
         </div>
       </header>
 
-      {/* --- CONTROLS BAR (Search, Sort, View) --- */}
+      {/* --- CONTROLS BAR --- */}
       <div className="relative z-10 pt-8 px-6 max-w-[1600px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-
-        {/* Left: Title Context */}
         <div className="flex-1">
           <h2 className="text-xl text-gray-400 font-light">
             Find your next <span className="text-teal-400 font-bold">opportunity</span>
@@ -328,8 +358,6 @@ export default function JobDashboard() {
         </div>
 
         <div className="flex items-center gap-4 w-full md:w-auto justify-end">
-
-          {/* View Toggle */}
           <div className="hidden md:flex bg-white/5 p-1 rounded-lg border border-white/5">
             <button onClick={() => setViewMode('grid')} className={`p-2 rounded ${viewMode === 'grid' ? 'bg-white/10 text-white' : 'text-gray-500'}`}>
               <Grid size={18} />
@@ -339,7 +367,6 @@ export default function JobDashboard() {
             </button>
           </div>
 
-          {/* Sort Dropdown */}
           <div className="relative">
             <button
               onClick={() => setShowSortMenu(!showSortMenu)}
@@ -391,7 +418,6 @@ export default function JobDashboard() {
             </AnimatePresence>
           </div>
 
-          {/* Mobile Filter Toggle */}
           <button
             onClick={() => setShowMobileFilters(true)}
             className="md:hidden p-2 text-gray-300 hover:text-white"
@@ -403,7 +429,7 @@ export default function JobDashboard() {
 
       <div className="max-w-[1600px] mx-auto px-4 py-8 flex gap-8">
 
-        {/* --- SIDEBAR (Desktop) --- */}
+        {/* --- SIDEBAR --- */}
         <aside className="hidden md:block w-72 shrink-0 sticky top-32 h-fit max-h-[calc(100vh-100px)] overflow-y-auto custom-scrollbar bg-[#111]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-2xl shadow-black/50">
           <div className="flex items-center gap-3 mb-8 pb-4 border-b border-white/5">
             <div className="p-2 bg-teal-500/10 rounded-lg text-teal-400">
@@ -455,7 +481,6 @@ export default function JobDashboard() {
           </div>
 
           {loading ? (
-            // SKELETON LOADING
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3, 4, 5, 6].map(i => (
                 <div key={i} className="h-64 rounded-2xl bg-white/5 animate-pulse" />
@@ -474,6 +499,7 @@ export default function JobDashboard() {
                     viewMode={viewMode}
                     isSaved={savedJobs.includes(job.id)}
                     onSave={() => toggleSave(job.id)}
+                    onClick={() => setSelectedJob(job)}
                   />
                 ))}
               </AnimatePresence>
@@ -492,12 +518,20 @@ export default function JobDashboard() {
 
         </main>
       </div>
+
+      {/* Job Details Modal */}
+      <JobDetailsModal
+        job={selectedJob}
+        isOpen={!!selectedJob}
+        onClose={() => setSelectedJob(null)}
+      />
+
     </div>
   );
 }
 
 // --- JOB CARD COMPONENT ---
-const JobCard = ({ job, viewMode, isSaved, onSave }) => {
+const JobCard = ({ job, viewMode, isSaved, onSave, onClick }) => {
   return (
     <motion.div
       layout
@@ -505,9 +539,10 @@ const JobCard = ({ job, viewMode, isSaved, onSave }) => {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.3 }}
+      onClick={onClick}
       className={`
         group relative bg-[#0A0A0A] border border-white/5 hover:border-teal-500/30 
-        rounded-2xl p-6 transition-all duration-300 hover:shadow-[0_0_30px_rgba(45,212,191,0.05)]
+        rounded-2xl p-6 transition-all duration-300 hover:shadow-[0_0_30px_rgba(45,212,191,0.05)] cursor-pointer
         ${viewMode === 'list' ? 'flex items-center gap-6' : 'flex flex-col'}
       `}
     >
@@ -519,7 +554,7 @@ const JobCard = ({ job, viewMode, isSaved, onSave }) => {
         </div>
         <button
           onClick={(e) => { e.stopPropagation(); onSave(); }}
-          className="p-2 rounded-full hover:bg-white/10 transition-colors"
+          className="p-2 rounded-full hover:bg-white/10 transition-colors z-10"
         >
           <Heart size={20} className={isSaved ? "fill-red-500 text-red-500" : "text-gray-500"} />
         </button>
@@ -547,13 +582,13 @@ const JobCard = ({ job, viewMode, isSaved, onSave }) => {
             <Briefcase size={14} /> {job.experience}y exp
           </div>
           <div className="flex items-center gap-1">
-            <Clock size={14} /> 2d ago
+            <Clock size={14} /> {new Date(job.postedDate).toLocaleDateString()}
           </div>
         </div>
 
         {/* Skills */}
         <div className="flex flex-wrap gap-2 mb-6">
-          {job.skills.map(skill => (
+          {job.skills?.slice(0, 3).map(skill => (
             <span key={skill} className="px-2 py-1 rounded bg-white/5 border border-white/5 text-[10px] text-gray-400 group-hover:border-white/20 transition-colors">
               {skill}
             </span>

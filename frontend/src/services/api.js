@@ -98,4 +98,64 @@ export const authAPI = {
   },
 };
 
+/**
+ * Job Description API functions
+ */
+export const jobAPI = {
+  /**
+   * Generate A/B/C variations of JD
+   * @param {Object} data - JD requirements
+   * @returns {Promise} Generated JDs
+   */
+  generateJD: async (data) => {
+    return apiRequest('/job-description/generate-ab', {
+      method: 'POST',
+      body: data
+    });
+  },
+
+  /**
+   * Get all JDs for an employer
+   * @param {string} employerId 
+   * @returns {Promise} List of JDs
+   */
+  getEmployerJDs: async (employerId) => {
+    return apiRequest(`/job-description/employer/${employerId}`);
+  }
+};
+
+/**
+ * Job Posting API functions
+ */
+export const jobsAPI = {
+  /**
+   * Get all active jobs
+   * @returns {Promise} List of jobs
+   */
+  getAll: async () => {
+    return apiRequest('/jobs');
+  },
+
+  /**
+   * Get single job by ID
+   * @param {string} id 
+   * @returns {Promise} Job details
+   */
+  getById: async (id) => {
+    return apiRequest(`/jobs/${id}`);
+  },
+
+  /**
+   * Create a new job posting
+   * @param {Object} jobData 
+   * @returns {Promise} Created job
+   */
+  create: async (jobData) => {
+    return apiRequest('/jobs', {
+      method: 'POST',
+      body: jobData
+    });
+  }
+};
+
 export default apiRequest;

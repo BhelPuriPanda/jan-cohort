@@ -6,7 +6,7 @@
  */
 
 import express from "express";
-import { generateJobDescriptionAB , getJD , saveEditedJD , switchJDVersion } from "../controllers/jdController.js";
+import { generateJobDescriptionAB , getJD , saveEditedJD , switchJDVersion, getJDsByEmployer } from "../controllers/jdController.js";
 
 // Create Express router instance
 const router = express.Router();
@@ -22,6 +22,9 @@ router.patch("/:jdId/save-version", saveEditedJD);
 
 // PATCH /api/job-description/:jdId/switch-version - Switch to different JD version
 router.patch("/:jdId/switch-version", switchJDVersion);
+
+// GET /api/job-description/employer/:employerId - Get all JDs for an employer
+router.get("/employer/:employerId", getJDsByEmployer);
 
 // Export router for use in main application
 export default router;

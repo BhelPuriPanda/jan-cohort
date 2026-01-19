@@ -1,12 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { jsPDF } from 'jspdf';
+import { jobAPI } from '../services/api';
+import Loading from '../components/ui/Loading';
 
 export default function JDGenerator() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
-    const [result, setResult] = useState(null); // { variant_a, variant_b }
-    const [activeVariant, setActiveVariant] = useState('A'); // 'A' or 'B'
+    const [result, setResult] = useState(null); // { variant_a, variant_b, variant_c }
+    const [activeVariant, setActiveVariant] = useState('A'); // 'A', 'B', 'C'
     const [experienceOpen, setExperienceOpen] = useState(false);
+    const [editedText, setEditedText] = useState('');
 
     const [formData, setFormData] = useState({
         title: '',
@@ -14,11 +18,23 @@ export default function JDGenerator() {
         skills: '',
         experience: 'Mid-Senior',
         location: '',
-        companyCulture: 'Professional and inclusive' // Hidden default or added to UI
+        companyCulture: 'Professional and inclusive'
     });
+
+    // Update editedText whenever activeVariant or result changes
+    useEffect(() => {
+        if (result) {
+            const variantKey = `variant_${activeVariant.toLowerCase()}`;
+            setEditedText(result[variantKey] || '');
+        }
+    }, [result, activeVariant]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleTextEdit = (e) => {
+        setEditedText(e.target.value);
     };
 
     const handleSubmit = async (e) => {
@@ -26,7 +42,6 @@ export default function JDGenerator() {
         setLoading(true);
 
         try {
-            // Retrieve user from localStorage to get employerId
             const userStr = localStorage.getItem('user');
             const user = userStr ? JSON.parse(userStr) : null;
 
@@ -47,52 +62,57 @@ export default function JDGenerator() {
                 keySkills: formData.skills.split(',').map(s => s.trim()).filter(s => s)
             };
 
-            const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4001/api';
-            const response = await fetch(`${apiUrl}/job-description/generate-ab`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+            const data = await jobAPI.generateJD(payload);
 
-            if (!response.ok) throw new Error('Failed to generate JD');
-            const data = await response.json();
-
-            // Map backend response format to frontend state expectation
-            if (data.versions && data.versions.length >= 2) {
+            if (data.versions && data.versions.length >= 3) {
                 setResult({
                     variant_a: data.versions[0].jdText,
-                    variant_b: data.versions[1].jdText
+                    variant_b: data.versions[1].jdText,
+                    variant_c: data.versions[2].jdText
                 });
-                setActiveVariant('A'); // Reset to A on new generation
+                setActiveVariant('A');
             } else {
                 setResult(data);
             }
 
         } catch (err) {
             console.error(err);
-            // Mock fallback
-            setResult({
-                variant_a: `Job Title: ${formData.title}\n\nWe are looking for a ${formData.experience} professional to join our team in ${formData.location || 'Remote'}.\n\nKey Responsibilities:\n- Lead innovative projects.\n- Collaborate with cross-functional teams.\n\nRequired Skills:\n- ${formData.skills}`,
-                variant_b: `Make an impact as our new ${formData.title}!\n\nLocation: ${formData.location || 'Remote'}\nLevel: ${formData.experience}\n\nWhy Join Us?\nWe are a dynamic team pushing boundaries in ${formData.industry || 'Tech'}.\n\nWhat you bring:\n- Proficiency in ${formData.skills}\n- A passion for excellence.`
-            });
-            setActiveVariant('A');
+            alert("Failed to generate JD. Please try again.");
         } finally {
             setLoading(false);
         }
     };
 
     const copyToClipboard = () => {
-        const text = activeVariant === 'A' ? result?.variant_a : result?.variant_b;
-        if (text) {
-            navigator.clipboard.writeText(text);
+        if (editedText) {
+            navigator.clipboard.writeText(editedText);
             alert('Copied to clipboard!');
         }
     };
 
-    // Helper to format displayed text
-    const getDisplayedText = () => {
-        if (!result) return "";
-        return activeVariant === 'A' ? result.variant_a : result.variant_b;
+    const downloadPDF = () => {
+        if (!editedText) return;
+
+        const doc = new jsPDF();
+
+        // Add Title
+        doc.setFontSize(20);
+        doc.text(formData.title || 'Job Description', 105, 20, { align: 'center' });
+
+        // Add Subtitle
+        doc.setFontSize(12);
+        doc.text(`${formData.industry} | ${formData.location} | ${formData.experience}`, 105, 30, { align: 'center' });
+
+        // Add Content
+        doc.setFontSize(10);
+        const splitText = doc.splitTextToSize(editedText, 180);
+        doc.text(splitText, 15, 45);
+
+        // Footer
+        doc.setFontSize(8);
+        doc.text('Generated by Clarity Jobs', 105, 280, { align: 'center' });
+
+        doc.save(`${formData.title.replace(/\s+/g, '_')}_JD_Variant_${activeVariant}.pdf`);
     };
 
     return (
@@ -110,20 +130,35 @@ export default function JDGenerator() {
                         </div>
                         <span className="text-xs font-bold tracking-widest uppercase text-ivory/80 font-mono group-hover:text-primary transition-colors">Back to Dashboard</span>
                     </button>
+                    {/* Link to Saved JDs */}
+                    <button
+                        onClick={() => navigate('/saved-jds')}
+                        className="text-xs font-bold tracking-widest uppercase text-ivory-dim hover:text-primary transition-colors font-mono"
+                    >
+                        Saved JDs
+                    </button>
                 </div>
 
                 <div className="flex items-center gap-4">
                     {result && (
-                        <div className="flex items-center gap-2 mr-4 bg-surface-dark/50 rounded-full px-3 py-1 border border-white/5">
-                            <span className="size-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                            <span className="text-[10px] font-mono text-ivory-dim">GENERATED</span>
-                        </div>
+                        <>
+                            <div className="flex items-center gap-2 mr-4 bg-surface-dark/50 rounded-full px-3 py-1 border border-white/5">
+                                <span className="size-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                                <span className="text-[10px] font-mono text-ivory-dim">GENERATED</span>
+                            </div>
+                            <button
+                                onClick={downloadPDF}
+                                className="h-9 px-5 rounded-full bg-surface-dark border border-white/10 text-ivory text-xs font-bold tracking-wide hover:bg-white/5 transition-colors uppercase flex items-center gap-2">
+                                <span className="material-symbols-outlined text-sm">picture_as_pdf</span>
+                                Export PDF
+                            </button>
+                        </>
                     )}
                     <button
                         onClick={copyToClipboard}
                         disabled={!result}
                         className="h-9 px-5 rounded-full bg-ivory text-background-dark text-xs font-bold tracking-wide hover:bg-white transition-colors shadow-[0_0_20px_rgba(255,255,255,0.1)] uppercase disabled:opacity-50 disabled:cursor-not-allowed">
-                        Copy to Clipboard
+                        Copy Text
                     </button>
                 </div>
             </header>
@@ -279,13 +314,19 @@ export default function JDGenerator() {
                         </div>
                     )}
 
+                    {loading && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <Loading message="AI is crafting your JD..." />
+                        </div>
+                    )}
 
-                    {result && (
-                        <div className="relative w-full max-w-[800px] min-h-[1000px] bg-paper bg-paper-texture shadow-paper text-ivory transition-all duration-500 transform border border-white/5 p-16 sm:p-20 animation-fade-in">
-                            <div className="max-w-[620px] mx-auto space-y-10">
+
+                    {result && !loading && (
+                        <div className="relative w-full max-w-[800px] min-h-[1000px] bg-paper bg-paper-texture shadow-paper text-ivory transition-all duration-500 transform border border-white/5 p-16 sm:p-20 animation-fade-in flex flex-col">
+                            <div className="max-w-[620px] mx-auto space-y-10 w-full flex-1 flex flex-col">
 
                                 {/* Header of Document */}
-                                <header className="border-b border-white/10 pb-10 mb-10 text-center">
+                                <header className="border-b border-white/10 pb-10 mb-10 text-center shrink-0">
                                     <div className="font-mono text-[10px] uppercase tracking-[0.3em] text-primary mb-6 flex justify-center items-center gap-4">
                                         <span className="h-px w-8 bg-primary/30"></span>
                                         {formData.industry || 'General'}
@@ -301,15 +342,23 @@ export default function JDGenerator() {
                                     </div>
                                 </header>
 
-                                {/* Content Body */}
-                                <div className="prose prose-invert prose-lg max-w-none font-serif text-ivory/80 leading-loose whitespace-pre-wrap">
-                                    {getDisplayedText()}
+                                {/* Content Body - Editable Textarea */}
+                                <div className="flex-1 relative -mx-4 px-4 group">
+                                    <textarea
+                                        value={editedText}
+                                        onChange={handleTextEdit}
+                                        className="w-full h-full min-h-[500px] bg-transparent resize-none focus:outline-none font-serif text-ivory/80 leading-loose prose prose-invert prose-lg max-w-none custom-scrollbar p-2 rounded-sm focus:bg-white/5 transition-colors"
+                                        spellCheck="false"
+                                    />
+                                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                                        <span className="text-[10px] font-mono text-ivory-dim bg-black/50 px-2 py-1 rounded">EDITABLE</span>
+                                    </div>
                                 </div>
 
                                 {/* Signoff */}
-                                <div className="mt-16 pt-8 border-t border-white/5 flex justify-between items-end">
+                                <div className="mt-16 pt-8 border-t border-white/5 flex justify-between items-end shrink-0">
                                     <div className="h-20 w-32 opacity-20 bg-[url('https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/Signature_sample.svg/1200px-Signature_sample.svg.png')] bg-contain bg-no-repeat bg-center grayscale invert"></div>
-                                    <div className="font-mono text-[10px] text-ivory-dim/40 uppercase tracking-[0.2em]">Generated by Unified Talent</div>
+                                    <div className="font-mono text-[10px] text-ivory-dim/40 uppercase tracking-[0.2em]">Generated by Clarity Jobs</div>
                                 </div>
 
                             </div>
@@ -317,34 +366,26 @@ export default function JDGenerator() {
                     )}
 
                     {/* Version Switcher - Floating on Right */}
-                    {result && (
+                    {result && !loading && (
                         <div className="fixed right-8 top-32 flex flex-col items-end gap-6 z-30 hidden xl:flex perspective-500">
 
-                            {/* Active Variant Indicator */}
-                            <div className="relative group cursor-pointer transition-transform hover:-translate-x-2" onClick={() => setActiveVariant(activeVariant)}>
-                                <div className="absolute -right-2 top-0 bottom-0 w-1 bg-primary/20 rounded-r-sm blur-[1px]"></div>
-                                <div className="w-16 h-20 bg-surface-dark border border-primary/40 rounded-sm shadow-[0_5px_15px_rgba(0,0,0,0.5)] flex flex-col items-center justify-between p-2 z-10 relative">
-                                    <span className="font-mono text-[10px] text-primary">v.{activeVariant === 'A' ? '01' : '02'}</span>
-                                    <span className="h-px w-4 bg-white/10"></span>
-                                    <span className="material-symbols-outlined text-primary text-sm">edit_document</span>
+                            {/* Version Buttons */}
+                            {['A', 'B', 'C'].map((variant) => (
+                                <div
+                                    key={variant}
+                                    className={`relative group cursor-pointer transition-transform hover:-translate-x-2 ${activeVariant === variant ? '' : 'opacity-60 hover:opacity-100'}`}
+                                    onClick={() => setActiveVariant(variant)}
+                                >
+                                    {activeVariant === variant && (
+                                        <div className="absolute -right-2 top-0 bottom-0 w-1 bg-primary/20 rounded-r-sm blur-[1px]"></div>
+                                    )}
+                                    <div className={`w-16 h-20 bg-surface-dark border ${activeVariant === variant ? 'border-primary/40' : 'border-white/10'} rounded-sm shadow-[0_5px_15px_rgba(0,0,0,0.5)] flex flex-col items-center justify-between p-2 transform ${activeVariant === variant ? '' : 'rotate-2'}`}>
+                                        <span className={`font-mono text-[10px] ${activeVariant === variant ? 'text-primary' : 'text-ivory-dim'}`}>v.0{variant === 'A' ? 1 : variant === 'B' ? 2 : 3}</span>
+                                        <span className="h-px w-4 bg-white/10"></span>
+                                        <span className={`font-serif italic text-[10px] ${activeVariant === variant ? 'text-ivory' : 'text-ivory-dim'}`}>{activeVariant === variant ? 'Active' : 'View'}</span>
+                                    </div>
                                 </div>
-                                <div className="absolute right-20 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                                    <span className="bg-background-dark text-ivory text-xs px-3 py-1.5 rounded-sm border border-white/10 shadow-xl font-mono">Current Draft</span>
-                                </div>
-                            </div>
-
-                            {/* Inactive Variant Button */}
-                            <div className="relative group cursor-pointer transition-transform hover:-translate-x-2 opacity-60 hover:opacity-100" onClick={() => setActiveVariant(activeVariant === 'A' ? 'B' : 'A')}>
-                                <div className="w-16 h-20 bg-surface-dark border border-white/10 rounded-sm shadow-[0_5px_15px_rgba(0,0,0,0.5)] flex flex-col items-center justify-between p-2 transform rotate-2">
-                                    <span className="font-mono text-[10px] text-ivory-dim">v.{activeVariant === 'A' ? '02' : '01'}</span>
-                                    <span className="h-px w-4 bg-white/10"></span>
-                                    <span className="font-serif italic text-[10px] text-ivory-dim">Switch</span>
-                                </div>
-                                <div className="absolute right-20 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                                    <span className="bg-background-dark text-ivory-dim text-xs px-3 py-1.5 rounded-sm border border-white/10 shadow-xl font-mono">View Version {activeVariant === 'A' ? 'B' : 'A'}</span>
-                                </div>
-                            </div>
-
+                            ))}
                         </div>
                     )}
                 </section>
