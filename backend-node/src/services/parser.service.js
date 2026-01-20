@@ -69,7 +69,14 @@ const parseResume = (text) => {
       skills = rawSkills.split(/[,|•\n]/).map(s => s.trim()).filter(s => s.length > 2 && s.length < 30);
   } else {
       // Fallback: search for common keywords
-      const commonSkills = ["JavaScript", "Python", "React", "Node.js", "Java", "C++", "SQL", "AWS", "Docker", "Git", "TypeScript", "HTML", "CSS", "Agile"];
+      const commonSkills = [
+        "JavaScript", "Python", "React", "Node.js", "Java", "C++", "C#", "Go", "Rust", "PHP", 
+        "Ruby", "Swift", "Kotlin", "TypeScript", "HTML", "CSS", "SQL", "NoSQL", "MongoDB", 
+        "PostgreSQL", "AWS", "Azure", "GCP", "Docker", "Kubernetes", "Git", "CI/CD", 
+        "Agile", "Scrum", "Jira", "Figma", "Redux", "GraphQL", "REST API", "Next.js", 
+        "Vue.js", "Angular", "Express", "Spring Boot", "Django", "Flask", "TensorFlow", 
+        "PyTorch", "Pandas", "NumPy", "Unity", "Unreal Engine", "Linux"
+      ];
       skills = commonSkills.filter(skill => text.toLowerCase().includes(skill.toLowerCase()));
   }
   

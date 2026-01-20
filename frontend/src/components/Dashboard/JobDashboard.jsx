@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, MapPin, DollarSign, Briefcase, Clock, Filter, Grid, List, Heart, X, CheckCircle, ChevronDown, Bell, LogOut, Info, User, FileText, FilePlus } from 'lucide-react';
 import { jobsAPI } from '../../services/api';
 import JobDetailsModal from './JobDetailsModal';
+import CompatibilityModal from './CompatibilityModal';
 
 // --- CUSTOM HOOK: Debounce ---
 function useDebounce(value, delay) {
@@ -50,6 +51,7 @@ export default function JobDashboard() {
   const [viewMode, setViewMode] = useState('grid');
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [selectedJob, setSelectedJob] = useState(null); // For Modal
+  const [checkingJob, setCheckingJob] = useState(null); // For Compatibility Modal
 
   const [savedJobs, setSavedJobs] = useState(() => {
     const saved = localStorage.getItem('claritySavedJobs');
@@ -487,23 +489,22 @@ export default function JobDashboard() {
               ))}
             </div>
           ) : (
-            <motion.div
-              layout
+            <div
               className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}
             >
-              <AnimatePresence>
-                {filteredJobs.map((job) => (
-                  <JobCard
-                    key={job.id}
-                    job={job}
-                    viewMode={viewMode}
-                    isSaved={savedJobs.includes(job.id)}
-                    onSave={() => toggleSave(job.id)}
-                    onClick={() => setSelectedJob(job)}
-                  />
-                ))}
-              </AnimatePresence>
-            </motion.div>
+              {filteredJobs.map((job) => (
+                <JobCard
+                  key={job.id}
+                  job={job}
+                  viewMode={viewMode}
+                  isSaved={savedJobs.includes(job.id)}
+                  onSave={() => toggleSave(job.id)}
+                  onClick={() => setSelectedJob(job)}
+                  onCheck={() => setCheckingJob(job)}
+                  userRole={user?.role}
+                />
+              ))}
+            </div>
           )}
 
           {filteredJobs.length === 0 && !loading && (
@@ -524,6 +525,14 @@ export default function JobDashboard() {
         job={selectedJob}
         isOpen={!!selectedJob}
         onClose={() => setSelectedJob(null)}
+        onCheck={() => setCheckingJob(selectedJob)}
+        userRole={user?.role}
+      />
+
+      <CompatibilityModal
+        job={checkingJob}
+        isOpen={!!checkingJob}
+        onClose={() => setCheckingJob(null)}
       />
 
     </div>
@@ -531,14 +540,9 @@ export default function JobDashboard() {
 }
 
 // --- JOB CARD COMPONENT ---
-const JobCard = ({ job, viewMode, isSaved, onSave, onClick }) => {
+const JobCard = ({ job, viewMode, isSaved, onSave, onClick, onCheck, userRole }) => {
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.3 }}
+    <div
       onClick={onClick}
       className={`
         group relative bg-[#0A0A0A] border border-white/5 hover:border-teal-500/30 
@@ -596,14 +600,33 @@ const JobCard = ({ job, viewMode, isSaved, onSave, onClick }) => {
         </div>
       </div>
 
-      {/* Footer Action */}
-      <div className={`${viewMode === 'list' ? 'hidden' : 'mt-auto pt-4 border-t border-white/5 w-full'}`}>
-        <button className="w-full py-3 rounded-lg bg-white/5 hover:bg-teal-500 hover:text-black font-medium text-sm transition-all duration-300 flex items-center justify-center gap-2 group/btn">
-          Quick Apply
+      {/* Footer Action - Visible in both Grid and List now, style adjusted for List */}
+      <div className={`${viewMode === 'list'
+        ? 'ml-4 flex items-center gap-2'
+        : 'mt-auto pt-4 border-t border-white/5 w-full flex gap-2'
+        }`}>
+        <button className={`
+          rounded-lg bg-white/5 hover:bg-teal-500 hover:text-black font-medium text-sm transition-all duration-300 flex items-center justify-center gap-2 group/btn
+          ${viewMode === 'list' ? 'px-4 py-2' : 'flex-1 py-3'}
+        `}>
+          {viewMode === 'grid' && 'Quick Apply'}
           <ArrowUpRight className="w-4 h-4 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform" />
         </button>
+
+        {userRole === 'employee' && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onCheck(); }}
+            className={`
+              rounded-lg bg-white/5 hover:bg-purple-500/20 hover:text-purple-400 border border-transparent hover:border-purple-500/40 transition-colors
+              ${viewMode === 'list' ? 'p-2' : 'px-3 py-3'}
+            `}
+            title="Check Compatibility"
+          >
+            <FileText size={18} />
+          </button>
+        )}
       </div>
-    </motion.div>
+    </div>
   );
 };
 

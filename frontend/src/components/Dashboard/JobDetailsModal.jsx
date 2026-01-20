@@ -1,8 +1,8 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MapPin, DollarSign, Briefcase, Clock, Building, Globe } from 'lucide-react';
+import { X, MapPin, DollarSign, Briefcase, Clock, Building, Globe, FileText } from 'lucide-react';
 
-export default function JobDetailsModal({ job, isOpen, onClose }) {
+export default function JobDetailsModal({ job, isOpen, onClose, onCheck, userRole }) {
     if (!isOpen || !job) return null;
 
     return (
@@ -115,6 +115,20 @@ export default function JobDetailsModal({ job, isOpen, onClose }) {
                         >
                             Close
                         </button>
+
+                        {userRole === 'employee' && (
+                            <button
+                                onClick={() => {
+                                    onClose();
+                                    onCheck();
+                                }}
+                                className="px-6 py-2.5 rounded-lg bg-teal-500/10 text-teal-400 border border-teal-500/20 hover:bg-teal-500/20 font-bold transition-all flex items-center gap-2"
+                            >
+                                <FileText size={18} />
+                                Check Match
+                            </button>
+                        )}
+
                         <button
                             onClick={() => alert('Application submitted!')}
                             className="px-8 py-2.5 rounded-lg bg-teal-500 hover:bg-teal-400 text-black font-bold shadow-lg shadow-teal-500/20 transition-all transform hover:-translate-y-0.5"
