@@ -3,9 +3,9 @@
 @theme {
   --font-sans: 'Inter', sans-serif;
   --font-display: 'Manrope', sans-serif;
-  
+
   /* The new cursive font */
-  --font-cursive: 'Pinyon Script', cursive; 
+  --font-cursive: 'Pinyon Script', cursive;
 }
 
 @layer base {
